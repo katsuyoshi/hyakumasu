@@ -15,18 +15,24 @@ class LinebotController < ApplicationController
   
     events = client.parse_events_from(body)
     events.each do |event|
+p [__LINE__]
       case event
       when Line::Bot::Event::Message
+p [__LINE__]
         case event.type
         when Line::Bot::Event::MessageType::Text
+p [__LINE__]
           message = {
             type: 'text',
             text: event.message['text']
           }
+p [__LINE__, message]
           client.reply_message(event['replyToken'], message)
         when Line::Bot::Event::MessageType::Image, Line::Bot::Event::MessageType::Video
+p [__LINE__]
           response = client.get_message_content(event.message['id'])
           tf = Tempfile.open("content")
+p [__LINE__]
           tf.write(response.body)
         end
       end
