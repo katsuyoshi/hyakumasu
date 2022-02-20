@@ -1,3 +1,5 @@
+# @see https://qiita.com/takashico/items/edb6050a8e54dd137148
+
 class LinebotController < ApplicationController
   require 'line/bot'
 
