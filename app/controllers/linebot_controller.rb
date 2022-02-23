@@ -1,5 +1,3 @@
-# @see https://qiita.com/takashico/items/edb6050a8e54dd137148
-
 class LinebotController < ApplicationController
   require 'line/bot'
   
@@ -10,55 +8,28 @@ class LinebotController < ApplicationController
 
     signature = request.env['HTTP_X_LINE_SIGNATURE']
     unless client.validate_signature(body, signature)
-      error 400 do 'Bad Request' end
+      render status: 400, json: { status: 400, message: 'Bad Request' }
     end
   
     events = client.parse_events_from(body)
     events.each do |event|
-p [__LINE__]
       case event
       when Line::Bot::Event::Message
-p [__LINE__]
         case event.type
         when Line::Bot::Event::MessageType::Text
-p [__LINE__]
           message = {
             type: 'text',
-            text: event.message['text']
+            text: state_brach #'もう夜か...' #event.message['text']
           }
-p [__LINE__, message]
           client.reply_message(event['replyToken'], message)
         when Line::Bot::Event::MessageType::Image, Line::Bot::Event::MessageType::Video
-p [__LINE__]
           response = client.get_message_content(event.message['id'])
           tf = Tempfile.open("content")
-p [__LINE__]
           tf.write(response.body)
         end
       end
     end
-=begin
-    body = request.body.read
-    signature = request.env['HTTP_X_LINE_SIGNATURE']
-    unless client.validate_signature(body, signature)
-      error 400 do 'Bad Request' end
-    end
-    events = client.parse_events_from(body)
 
-    events.each do |event|
-      case event
-      when Line::Bot::Event::Message
-        case event.type
-        when Line::Bot::Event::MessageType::Text
-          message = {
-            type: 'text',
-            text: event.message['text']
-          }
-        end
-      end
-      client.reply_message(event['replyToken'], message)
-    end
-=end
     head :ok
   end
 
@@ -70,6 +41,41 @@ p [__LINE__]
       config.channel_secret = ENV["LINE_CHANNEL_SECRET"]
       config.channel_token = ENV["LINE_CHANNEL_TOKEN"]
     }
+  end
+
+  def state_brach
+    case session[:state] || :idle
+    when :idle
+      session[:state] = :started
+      state_idle
+    when :started
+      session[:state] = :finished
+      "答えてね"
+    when :finished
+      session[:state] = :idle
+      "終了"
+    end
+  end
+
+  def state_idle
+    n = (session[:level] || 1) + 1
+    q = 2.times.map{|i| n.times.map{|i| (1..9).to_a.sample}}
+    a = n.times.map{|i| [nil] * n}
+    session[:question] = q
+    session[:answer] = a
+
+    messages = ["問題は"]
+    messages << "\\ " + q.first.join(" ")
+    q.last.each do |v|
+      messages << v.to_s
+    end
+    messages.join("\n")
+  end
+
+  def state_started
+  end
+
+  def state_finished
   end
 
 end
