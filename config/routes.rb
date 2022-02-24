@@ -1,5 +1,16 @@
 Rails.application.routes.draw do
-  post '/callback' => 'linebot#callback'
+
+  resources :users, only: [] do
+    member do
+      get :image
+      get :preview_image
+    end
+  end
+
+  get '/line/preview_image'   => 'linebot#preview_image'
+  get '/line/image'           => 'linebot#image'
+  get '/image'                => 'linebot#image'
+  post '/callback'            => 'linebot#callback'
 
   get 'welcome/index'
   # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
