@@ -10,7 +10,16 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_02_23_065047) do
+ActiveRecord::Schema.define(version: 2022_02_24_140131) do
+
+  create_table "images", force: :cascade do |t|
+    t.binary "data"
+    t.integer "step", default: 0
+    t.integer "user_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["user_id"], name: "index_images_on_user_id"
+  end
 
   create_table "users", force: :cascade do |t|
     t.string "user_id"
@@ -18,8 +27,11 @@ ActiveRecord::Schema.define(version: 2022_02_23_065047) do
     t.integer "level", default: 1
     t.string "col_numbers_str"
     t.string "row_numbers_str"
+    t.string "answers_str"
+    t.string "inputs_str"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end
 
+  add_foreign_key "images", "users"
 end

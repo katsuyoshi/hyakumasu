@@ -21,8 +21,8 @@ module Hyakumasu
     # config.eager_load_paths << Rails.root.join("extras")
 
     # @see https://qiita.com/hirokun0204/items/a18427c50c90676aed95
-    config.hosts << "rewite"
-    #config.hosts << "https://4077-220-209-99-244.ngrok.io"
+    #config.hosts << "rewite"
+    config.hosts << ENV["SERVER_URL"].gsub(/http(s)?:\/\//, "") if ENV["SERVER_URL"]
 
   end
 

@@ -6,6 +6,8 @@ class CreateUsers < ActiveRecord::Migration[6.1]
       t.integer :level, default: 1
       t.string :col_numbers_str
       t.string :row_numbers_str
+      t.string :answers_str
+      t.string :inputs_str
 
       t.timestamps
     end

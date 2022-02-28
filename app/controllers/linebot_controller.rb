@@ -1,6 +1,6 @@
 class LinebotController < ApplicationController
   require 'line/bot'
-  before_action :set_user, only: %i[ callback ]
+  before_action :set_user, only: %i[ callback image preview_image ]
 
   skip_before_action :verify_authenticity_token, only: ['callback']
 
@@ -32,11 +32,13 @@ class LinebotController < ApplicationController
   end
 
   def image
-    send_file 'tmp/result.png', type: 'image/png', disposition: 'inline'
+    #send_file 'tmp/result.png', type: 'image/png', disposition: 'inline'
+    send_data(@user.image.data, filename: 'image.jpg', disposition: 'attachment')
   end
 
   def preview_image
-    send_file 'tmp/result.png', type: 'image/png', disposition: 'inline'
+    #send_file 'tmp/result.png', type: 'image/png', disposition: 'inline'
+    send_data(@user.image.data, filename: 'image.jpg', disposition: 'attachment')
   end
 
 
@@ -99,19 +101,11 @@ p res
   def state_idle
     # 問題開始
     @user.level = 10
-    n = @user.level + 1
-    q = 2.times.map{|i| n.times.map{|i| (1..9).to_a.sample}}
-    a = n.times.map{|i| [nil] * n}
-    @user.col_numbers = q.first
-    @user.row_numbers = q.last
-    @user.save
-
-    gen_masu_image
-
+    @user.start
     {
       type: 'image',
-      originalContentUrl: image_user_url(@user),
-      previewImageUrl: preview_image_user_url(@user),
+      originalContentUrl: "#{server_url}#{image_user_path(@user)}",
+      previewImageUrl: "#{server_url}#{preview_image_user_path(@user)}",
     }
   end
 
@@ -122,6 +116,7 @@ p res
   def state_finished
   end
 
+=begin
   def gen_masu_image
     l = @user.level + 2
     len = 410
@@ -157,7 +152,6 @@ p res
     send_file 'tmp/result.png', type: 'image/png', disposition: 'inline'
   end
 
-
   # 一文字ずつ文字を設定していきます。伸ばし棒は９０度回転させています。
   def insert_vertical_word(word, x, y, fontsize, config)
     word.chars.each_with_index do |c, i|
@@ -172,6 +166,7 @@ p res
       end
     end
   end
+=end
 
   def server_url
     ENV["SERVER_URL"] || "https://hyakumasu.herokuapp.com"
@@ -188,7 +183,9 @@ p res
   
   # Use callbacks to share common setup or constraints between actions.
   def set_user
-    @user = User.find_or_create_by(user_id: user_params[:events].first[:source][:userId])
+    @user = User.find_or_create_by(user_id: user_params[:events].first[:source][:userId]) if user_params[:events]
+    @user ||= User.first
+p @user
   end
 
   # Only allow a list of trusted parameters through.
