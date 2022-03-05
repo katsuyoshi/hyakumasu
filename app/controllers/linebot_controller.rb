@@ -76,13 +76,12 @@ class LinebotController < ApplicationController
     case @user.state || User::STATE_IDLE
     when User::STATE_IDLE
       res = state_idle
-      #@user.state = User::STATE_STARTED
+      @user.state = User::STATE_STARTED
     when User::STATE_STARTED
-      res = "答えてね"
-      @user.state = User::STATE_FINISHED
+      res = state_started
+      @user.state = User::STATE_IDLE if @user.finished?
     when User::STATE_FINISHED
-      session[:state] = User::STATE_IDLE
-      res = "終了"
+      res = state_finished
       @user.state = User::STATE_IDLE
     end
     @user.save if @user.changed
@@ -99,74 +98,54 @@ p res
   end
 
   def state_idle
+p :idle
     # 問題開始
     @user.level = 10
     @user.start
     {
       type: 'image',
-      originalContentUrl: "#{server_url}#{image_user_path(@user)}",
-      previewImageUrl: "#{server_url}#{preview_image_user_path(@user)}",
+      originalContentUrl: "#{server_url}#{image_user_path(@user, step: @user.step)}",
+      previewImageUrl: "#{server_url}#{preview_image_user_path(@user, step: @user.step)}",
     }
   end
 
-
   def state_started
+p :stated
+    inp = params[:events].first[:message][:text]
+p inp
+    if /(\d+)/ =~ inp
+p $1
+      @user.input $1.to_i
+      if @user.finished?
+        state_finished
+      else
+        {
+          type: 'image',
+          originalContentUrl: "#{server_url}#{image_user_path(@user, step: @user.step)}",
+          previewImageUrl: "#{server_url}#{preview_image_user_path(@user, step: @user.step)}",
+        }
+      end
+    else
+      "すうじでこたえてね。"
+    end
   end
 
   def state_finished
-  end
-
-=begin
-  def gen_masu_image
-    l = @user.level + 2
-    len = 410
-    w = h = (len-2) / l
-    x0 = y0 = (len-2 - l * w) / 2 + 1
-    color = '#000000'
-    image = MiniMagick::Image.open('./app/assets/images/masu.png')
-    image.combine_options do |c|
-      l.times{|y| 
-        l.times{|x|
-          #c.stroke = color
-          c.fill '#ffffff'
-          c.stroke '#000000'
-          cmd = "rectangle #{x0 + w * x},#{y0 + h * y} #{x0 + w * x + w},#{y0 + h * y + h}"
-          c.draw cmd
-        }
+p :finished
+    if @user.correct_all?
+      {
+        type: "sticker",
+        packageId: "6325",
+        stickerId: "10979904"
+      }
+    else
+      {
+        type: "sticker",
+        packageId: "6325",
+        stickerId: "10979917"
       }
     end
-    fontsize = (w * 0.8).to_i
-    @user.col_numbers.each_with_index do |n, i|
-      image.combine_options do |config|
-        config.font "./app/assets/fonts/ZenOldMincho-Bold.ttf"
-        config.pointsize fontsize
-        config.fill '#000000'
-        #config.gravity 'Center'
-        #config.annotate
-        config.draw "text #{x0 + (i + 1) * w + w / 2 - fontsize / 5},#{y0 + h - fontsize / 4} '#{n}'"
-        config.draw "text #{x0 + w / 2 - fontsize / 5},#{y0 + (i + 2) * h - fontsize / 4} '#{@user.row_numbers[i]}'"
-      end
-    end
-
-    image.write "tmp/result.png"
-    send_file 'tmp/result.png', type: 'image/png', disposition: 'inline'
   end
-
-  # 一文字ずつ文字を設定していきます。伸ばし棒は９０度回転させています。
-  def insert_vertical_word(word, x, y, fontsize, config)
-    word.chars.each_with_index do |c, i|
-      if c == "ー"
-        config.gravity 'SouthWest'
-        config.rotate -90
-        config.draw "text #{y + i * fontsize + fontsize / 4},#{x - fontsize / 5} '#{c}'"
-        config.rotate 90
-      else
-        config.gravity 'NorthWest'
-        config.draw "text #{x},#{y + i * fontsize} '#{c}'"
-      end
-    end
-  end
-=end
 
   def server_url
     ENV["SERVER_URL"] || "https://hyakumasu.herokuapp.com"

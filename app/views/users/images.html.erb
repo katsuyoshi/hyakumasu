@@ -1,0 +1,4 @@
+<% @user.images.each_with_index do |img, i| %>
+    <%= image_tag image_user_path(@user, step: i) %>
+    <br />
+<% end %>

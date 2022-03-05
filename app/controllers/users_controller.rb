@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-  before_action :set_user, only: %i[ show edit update destroy image preview_image ]
+  before_action :set_user, only: %i[ show edit update destroy image preview_image images]
 
   # GET /users or /users.json
   def index
@@ -58,12 +58,15 @@ class UsersController < ApplicationController
   end
 
   def image
-p @user
-    send_data(@user.image.data, filename: 'image.jpg', disposition: 'attachment')
+    img = @user.images.at(params[:step].to_i).last || @user.images.last
+    send_data(img.data, filename: 'image.jpg', disposition: 'attachment')
   end
 
   def preview_image
     send_data(@user.image.data, filename: 'image.jpg', disposition: 'attachment')
+  end
+
+  def images
   end
 
   private
