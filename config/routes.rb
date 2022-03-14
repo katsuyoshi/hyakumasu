@@ -4,9 +4,14 @@ Rails.application.routes.draw do
     collection do
     end
     member do
+      get :show
       get :image
       get :preview_image
       get :images
+      post :start
+      get :play
+      put :input
+      get :finished
     end
   end
 

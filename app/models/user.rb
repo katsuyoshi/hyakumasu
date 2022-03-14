@@ -100,11 +100,16 @@ p self.answers
   end
 
   def image at=nil
-    img = images.at(at || self.step).first
+    step = at || self.step
+    step = step.to_i
+p [at, self.step, step]
+    img = images.at(at || step).first
     return img if img
 
     gen_image
-    img = Image.new(data: File.read(image_file_path), step: at)
+p [at, self.step, step]
+    img = Image.create(user_id: self.id, data: File.read(image_file_path(step)), step: at)
+p img
     self.images << img
     img
   end
@@ -158,6 +163,8 @@ p [no, r0, c0]
 
     # 回答を書き込み
     inputs.each_with_index do |i|
+      i = i.to_i
+p [i, l]
       y = i / l + 1
       x = i % l + 1
       image.combine_options do |config|
@@ -171,6 +178,7 @@ p [no, r0, c0]
       end
     end
 
+p image_file_path
     image.write image_file_path
   end
 
@@ -186,8 +194,9 @@ p [no, r0, c0]
     "./app/assets/fonts/ZenOldMincho-Bold.ttf"
   end
 
-  def image_file_path
-    path = "tmp/#{self.id}/result.png"
+  def image_file_path step=nil
+    step ||= self.step
+    path = "tmp/#{self.id}/result_#{step}.png"
     mkdir_p File.dirname(path)
     path
   end

@@ -1,0 +1,15 @@
+<%= image_tag image_user_path(@user) %>
+
+<p><h1>
+    <% if @user.correct_all? %>
+        <font color='green'>
+            正解
+        </font>
+    <% else %>
+        <font color='red'>
+            残念
+        </font>
+    <% end %>
+</h1></p>
+
+<%= link_to 'スタート', start_user_path(@user), method: :post %>

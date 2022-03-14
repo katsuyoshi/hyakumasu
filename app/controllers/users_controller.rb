@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-  before_action :set_user, only: %i[ show edit update destroy image preview_image images]
+  before_action :set_user, only: %i[ show edit update destroy image preview_image images start play input finished]
 
   # GET /users or /users.json
   def index
@@ -8,6 +8,13 @@ class UsersController < ApplicationController
 
   # GET /users/1 or /users/1.json
   def show
+    case @user.state
+    when User::STATE_IDLE
+    when User::STATE_STARTED
+      redirect_to play_user_path(@user)
+    when User::STATE_FINISHED
+      redirect_to finished_user_path(@user)
+    end
   end
 
   # GET /users/new
@@ -58,8 +65,10 @@ class UsersController < ApplicationController
   end
 
   def image
-    img = @user.images.at(params[:step].to_i).last || @user.images.last
-    send_data(img.data, filename: 'image.jpg', disposition: 'attachment')
+    step = params[:step] || @user.step
+    step = step.to_i
+    img = @user.image(step)
+    send_data(img.data, filename: "image_#{@user.id}_#{step}.jpg", disposition: 'attachment')
   end
 
   def preview_image
@@ -67,6 +76,27 @@ class UsersController < ApplicationController
   end
 
   def images
+  end
+
+  def start
+    @user.start
+    redirect_to play_user_path(@user)
+  end
+
+  def play
+  end
+
+  def input
+    @user.input params['number'].to_i
+    puts "*"* 80, params['numbrer'].to_i
+    if @user.finished?
+      redirect_to finished_user_path(@user)
+    else 
+      redirect_to play_user_path(@user)
+    end
+  end
+
+  def finished
   end
 
   private
