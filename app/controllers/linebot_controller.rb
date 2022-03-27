@@ -42,24 +42,6 @@ class LinebotController < ApplicationController
   end
 
 
-=begin
-  def image
-    image = MiniMagick::Image.open('./app/assets/images/2x2.png')
-    word = "縦書きですー"
-    fontsize = 30
-    color = '#000000'
-    image.combine_options do |config|
-      config.font "./app/assets/fonts/ZenOldMincho-Bold.ttf"
-      config.pointsize fontsize
-      config.fill color
-      insert_vertical_word(word, 100, 100, fontsize, config)
-    end
-    image.write "tmp/result.png"
-    send_file 'tmp/result.png', type: 'image/png', disposition: 'inline'
-  end
-=end
-
-
   private
 
   def client
@@ -93,12 +75,10 @@ class LinebotController < ApplicationController
       }
     end
     
-p res
     res
   end
 
   def state_idle
-p :idle
     # 問題開始
     @user.level = 10
     @user.start
@@ -110,11 +90,8 @@ p :idle
   end
 
   def state_started
-p :stated
     inp = params[:events].first[:message][:text]
-p inp
     if /(\d+)/ =~ inp
-p $1
       @user.input $1.to_i
       if @user.finished?
         state_finished
@@ -131,33 +108,12 @@ p $1
   end
 
   def state_finished
-p :finished
     {
       type: 'image',
       originalContentUrl: "#{server_url}#{image_user_path(@user, step: @user.step)}",
       previewImageUrl: "#{server_url}#{preview_image_user_path(@user, step: @user.step)}",
     }
-=begin
-    if @user.correct_all?
-      {
-        type: 'image',
-        originalContentUrl: "#{server_url}#{image_user_path(@user, step: @user.step)}",
-        previewImageUrl: "#{server_url}#{preview_image_user_path(@user, step: @user.step)}",
-      }
-      {
-        type: "sticker",
-        packageId: "6325",
-        stickerId: "10979904"
-      }
-    else
-      {
-        type: "sticker",
-        packageId: "6325",
-        stickerId: "10979917"
-      }
-    end
-=end
-end
+  end
 
   def server_url
     ENV["SERVER_URL"] || "https://hyakumasu.herokuapp.com"
@@ -176,7 +132,6 @@ end
   def set_user
     @user = User.find_or_create_by(user_id: user_params[:events].first[:source][:userId]) if user_params[:events]
     @user ||= User.first
-p @user
   end
 
   # Only allow a list of trusted parameters through.
