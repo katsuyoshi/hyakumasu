@@ -10,51 +10,35 @@ class User < ApplicationRecord
   has_many :images, dependent: :destroy
 
   def col_numbers
-    if self.col_numbers_str
-      Marshal.load self.col_numbers_str
-    else
-      []
-    end
+    (col_numbers_str || "").split(',').map(&:to_i)
   end
   
   def col_numbers= numbers
-    self.col_numbers_str = Marshal.dump numbers
+    self.col_numbers_str = numbers.map(&:to_s).join(',')
   end
   
   def row_numbers
-    if self.row_numbers_str
-      Marshal.load self.row_numbers_str
-    else
-      []
-    end
+    (row_numbers_str || "").split(',').map(&:to_i)
   end
 
   def row_numbers= numbers
-    self.row_numbers_str = Marshal.dump numbers
+    self.row_numbers_str = numbers.map(&:to_s).join(',')
   end
   
   def answers
-    if self.answers_str
-      Marshal.load self.answers_str
-    else
-      []
-    end
+    (answers_str || "").split(',').map(&:to_i)
   end
 
   def answers= numbers
-    self.answers_str = Marshal.dump numbers
+    self.answers_str = numbers.map(&:to_s).join(',')
   end
   
   def inputs
-    if self.inputs_str
-      Marshal.load self.inputs_str
-    else
-      []
-    end
+    (inputs_str || "").split(',').map(&:to_i)
   end
 
   def inputs= numbers
-    self.inputs_str = Marshal.dump numbers
+    self.inputs_str = numbers.map(&:to_s).join(',')
   end
 
 
@@ -202,12 +186,11 @@ p self
           config.fill '#00ff00'
           config.stroke '#000000'
           config.draw "text 100,120 '正解'"
-          #config.draw "text 1,100 correct"
         else
           config.fill '#ff0000'
           config.stroke '#000000'
-          config.draw "text 50,120 '不正解'"
-          #config.draw "text 1,100 incorrect"
+          #config.draw "text 50,120 '不正解'"
+          config.draw "text 50,120 'おしい'"
         end
       end
     end
