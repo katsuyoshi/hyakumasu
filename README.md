@@ -1,24 +1,70 @@
-# README
+# 目指せ100マス計算
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Line Messaging API を用いた100マス(現在4マス)計算です。
 
-Things you may want to cover:
+## 動作環境
 
-* Ruby version
+- ruby 2.7.4p191
+- Rails 6.1.4.6
 
-* System dependencies
+## 準備
 
-* Configuration
+### Line Messaging API のchannel作成
 
-* Database creation
+ほぼこちらを参考にしました。
+下のローカルでの確認も参考にしています。ありがとうございます。
 
-* Database initialization
+https://qiita.com/TakeshiFukushima/items/aec362407f1ee2f455a9
 
-* How to run the test suite
+### ローカルでの確認
 
-* Services (job queues, cache servers, search engines, etc.)
+Dotenvを使っているので.envファイルに環境変数を設定します。
 
-* Deployment instructions
+```
+LINE_CHANNEL_ID=xxxxxx
+LINE_CHANNEL_SECRET=xxxxx
+LINE_CHANNEL_TOKEN=xxxx
+```
 
-* ...
+初期化
+```
+% bundle install
+% rake db:migrate
+```
+
+アプリ起動
+
+```
+% raila s -b 0.0.0.0
+```
+
+Lineからローカル開発環境にアクセスできる様にngrokを起動
+
+```
+% ngrok http 3000
+ngrok by @inconshreveable                                                             (Ctrl+C to quit)
+                                                                                                      
+Session Status                online                                                                  
+Version                       2.3.40                                                                  
+Region                        United States (us)                                                      
+Web Interface                 http://127.0.0.1:4040                                                   
+Forwarding                    http://1a52-220-209-111-109.ngrok.io -> http://localhost:3000           
+Forwarding                    https://1a52-220-209-111-109.ngrok.io -> http://localhost:3000          
+```
+
+Forwardingとして表示されるhttpsで表示されるURLを環境変数に登録しRailsアプリを再起動します。
+
+```
+SERVER_URL=https://1a52-220-209-111-109.ngrok.io
+```
+
+Line Messageing API channelのcallbackにも登録。callbackパスがラインからのcallbackバスとしています。
+
+![](https://i.gyazo.com/5b8adf33fe7baab064f55977e1169269.png)
+
+## 運用
+
+動作確認できたらHerokuなどでアプリを立ち上げます。
+Line Messageing API channelのcallbackを運用時のURLに変更します。
+
+
