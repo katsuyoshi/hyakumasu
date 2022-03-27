@@ -77,6 +77,7 @@ class User < ApplicationRecord
     self.images = []
     self.inputs = []
 
+p self
     self.save
   end
 
