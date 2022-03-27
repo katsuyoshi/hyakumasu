@@ -77,7 +77,6 @@ class User < ApplicationRecord
     self.images = []
     self.inputs = []
 
-p self.answers
     self.save
   end
 
@@ -87,8 +86,9 @@ p self.answers
     self.save
   end
 
-  def correct?
-    self.inputs.last == self.answers[self.step - 1]
+  def correct? at=nil
+    at ||= [self.inputs.size - 1, 0].max
+    self.inputs[at] == self.answers[at]
   end
 
   def correct_all?
@@ -102,14 +102,11 @@ p self.answers
   def image at=nil
     step = at || self.step
     step = step.to_i
-p [at, self.step, step]
     img = images.at(at || step).first
     return img if img
 
     gen_image
-p [at, self.step, step]
     img = Image.create(user_id: self.id, data: File.read(image_file_path(step)), step: at)
-p img
     self.images << img
     img
   end
@@ -124,7 +121,6 @@ p img
     image = MiniMagick::Image.open(base_image_path)
     r0 = no / l
     c0 = no % l
-p [no, r0, c0]
     # 枠と現在の加算箇所に丸印をつける
     image.combine_options do |c|
       (l + 1).times{|y| 
@@ -134,9 +130,11 @@ p [no, r0, c0]
           c.stroke '#000000'
           cmd = "rectangle #{x0 + w * x},#{y0 + h * y} #{x0 + w * x + w},#{y0 + h * y + h}"
           c.draw cmd
-          if (y == 0 && (c0 + 1) == x) ||
+          if !finished? && (
+             (y == 0 && (c0 + 1) == x) ||
              (x == 0 && (r0 + 1) == y) ||
              ((x == (c0 + 1)) && (y == (r0 + 1)))
+            )
             cx = x0 + w * x + w / 2
             cy = y0 + h * y + h / 2
             cmd = "circle #{cx},#{cy} #{cx + w/3},#{cy+ h/3}"
@@ -155,17 +153,16 @@ p [no, r0, c0]
         config.fill '#000000'
         #config.gravity 'Center'
         #config.annotate
-        x_ost = -6
-        config.draw "text #{x0 + x_ost + (i + 1) * w + w / 2 - fontsize / 5},#{y0 + h - fontsize / 4} '#{n}'"
-        config.draw "text #{x0 + x_ost+ w / 2 - fontsize / 5},#{y0 + (i + 2) * h - fontsize / 4} '#{row_numbers[i]}'"
+        x_offset = -6
+        config.draw "text #{x0 + x_offset + (i + 1) * w + w / 2 - fontsize / 5},#{y0 + h - fontsize / 4} '#{n}'"
+        config.draw "text #{x0 + x_offset+ w / 2 - fontsize / 5},#{y0 + (i + 2) * h - fontsize / 4} '#{row_numbers[i]}'"
       end
     end
 
     # 回答を書き込み
-    inputs.each_with_index do |i|
+    inputs.each_with_index do |n, i|
       i = i.to_i
-p [i, l]
-      y = i / l + 1
+      y = i / l + 2
       x = i % l + 1
       image.combine_options do |config|
         config.font font_path
@@ -173,12 +170,47 @@ p [i, l]
         config.fill '#000000'
         #config.gravity 'Center'
         #config.annotate
-        x_ost = -6
-        config.draw "text #{x0 + x_ost + x * w + w / 2 - fontsize / 5},#{y0 + y * h - fontsize / 4} '#{self.inputs[i]}'"
+        case n.to_s.length
+        when 2
+          x_offset = -38
+        else
+          x_offset = -15
+        end
+
+        unless finished?
+          config.fill '#000000'
+          config.stroke '#000000'
+        else
+          if correct?(i)
+            config.fill '#00ff00'
+            config.stroke '#000000'
+          else
+            config.fill '#ff0000'
+            config.stroke '#000000'
+          end
+        end
+        config.draw "text #{x0 + x_offset + x * w + w / 2 - fontsize / 5},#{y0 + y * h - fontsize / 4} '#{n}'"
       end
     end
 
-p image_file_path
+    image.combine_options do |config|
+      config.font font_path
+      config.pointsize fontsize
+      if finished?
+        if correct_all?
+          config.fill '#00ff00'
+          config.stroke '#000000'
+          config.draw "text 100,120 '正解'"
+          #config.draw "text 1,100 correct"
+        else
+          config.fill '#ff0000'
+          config.stroke '#000000'
+          config.draw "text 50,120 '不正解'"
+          #config.draw "text 1,100 incorrect"
+        end
+      end
+    end
+
     image.write image_file_path
   end
 

@@ -18,7 +18,7 @@ class LinebotController < ApplicationController
       when Line::Bot::Event::Message
         case event.type
         when Line::Bot::Event::MessageType::Text
-          message = state_brach
+          message = state_branch
           client.reply_message(event['replyToken'], message)
         when Line::Bot::Event::MessageType::Image, Line::Bot::Event::MessageType::Video
           response = client.get_message_content(event.message['id'])
@@ -70,7 +70,7 @@ class LinebotController < ApplicationController
     }
   end
 
-  def state_brach
+  def state_branch
     res = ""
     set_user
     case @user.state || User::STATE_IDLE
@@ -132,7 +132,18 @@ p $1
 
   def state_finished
 p :finished
+    {
+      type: 'image',
+      originalContentUrl: "#{server_url}#{image_user_path(@user, step: @user.step)}",
+      previewImageUrl: "#{server_url}#{preview_image_user_path(@user, step: @user.step)}",
+    }
+=begin
     if @user.correct_all?
+      {
+        type: 'image',
+        originalContentUrl: "#{server_url}#{image_user_path(@user, step: @user.step)}",
+        previewImageUrl: "#{server_url}#{preview_image_user_path(@user, step: @user.step)}",
+      }
       {
         type: "sticker",
         packageId: "6325",
@@ -145,7 +156,8 @@ p :finished
         stickerId: "10979917"
       }
     end
-  end
+=end
+end
 
   def server_url
     ENV["SERVER_URL"] || "https://hyakumasu.herokuapp.com"
